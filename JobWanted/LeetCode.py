@@ -9,6 +9,7 @@ import heapq
 from collections import deque
 from collections import defaultdict
 from collections import OrderedDict
+from typing import List
 #import random
 
 #题目1383：最小堆找出元素再做计算
@@ -565,7 +566,7 @@ class ListNode:
         self.val = val
         self.next = None
 class Solution_23:
-    def mergeKLists(self, lists:list[100000][ListNode]):
+    def mergeKLists(self, lists:List[100000][ListNode]):
         minHeap = []
         for ele in lists:
             while ele:
