@@ -23,4 +23,10 @@ class ModuleSpec:
     submodules: type = None
 
 def build_module(spec_or_module: Union[ModuleSpec, type], *args, **kwargs):
+    # If the passed `spec_or_module` is
+    # a `Function`, then return it as it is
+    # NOTE: to support an already initialized module add the following condition
+    # `or isinstance(spec_or_module, torch.nn.Module)` to the following if check
+    if isinstance(spec_or_module, types.FunctionType):
+        return spec_or_module
     
