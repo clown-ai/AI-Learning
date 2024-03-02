@@ -23,12 +23,19 @@ class MixtralBlockSparseTop2MLP(nn.Module):
         self.act_fn = nn.SiLU()
     
     def forward(self, hidden_states):
-        y = self.act_fn(self.w1(hidden_states)) * self.w3(hidden_states)
+        y = self.act_fn(self.w1(hidden_states)) * self.w3(hidden_states) # [1, 64, 256] * [1, 64, 265] Here's dot prodoct
         y = self.w2(y)
         return y
 
 # x = torch.randn(1, 64, 128)
 # expert = MixtralBlockSparseTop2MLP()
+# print(expert)
+# MixtralBlockSparseTop2MLP(
+#   (w1): Linear(in_features=128, out_features=256, bias=False)
+#   (w2): Linear(in_features=256, out_features=128, bias=False)
+#   (w3): Linear(in_features=128, out_features=256, bias=False)
+#   (act_fn): SiLU()
+# )
 # g = expert(x)
 # print("single expert input: ", x.shape)
 # print("single expert output: ", g.shape)
@@ -52,6 +59,19 @@ class MixtralSparseMoeBlock(nn.Module):
         self.experts = nn.ModuleList([MixtralBlockSparseTop2MLP() for _ in range(self.num_local_experts)])
 
 experts = MixtralSparseMoeBlock()
+# print(experts)
+
+# MixtralSparseMoeBlock(
+#   (gate): Linear(in_features=128, out_features=8, bias=False)    
+#   (experts): ModuleList(
+#     (0-7): 8 x MixtralBlockSparseTop2MLP(
+#       (w1): Linear(in_features=128, out_features=256, bias=False)
+#       (w2): Linear(in_features=256, out_features=128, bias=False)
+#       (w3): Linear(in_features=128, out_features=256, bias=False)
+#       (act_fn): SiLU()
+#     )
+#   )
+# )
 
 # Note we don't implemente the `forward` of SMoE
 # Let's disassemble it.
@@ -195,4 +215,16 @@ for expert_id in range(experts.num_local_experts):
     print(f'--------expert {expert_id} --------')
 
     expert_layer = experts.experts[expert_id]
+    print(expert_mask[expert_id])
+    index, top_x = torch.where(expert_mask[expert_id])
+    print(f'expert {expert_id} compute sample index:', top_x.tolist())
+    print(f'expert {expert_id} top1:0, top2:1', index.tolist())
+    print(f'{len(top_x)} / {x.shape[1]} token select expert {expert_id}')
+
+    top_x_list = top_x.tolist()
+    index_list = index.tolist()
+
+    current_state = hidden_states[None, top_x_list].reshape(-1, hidden_dim)
+
+    current_hidden_state = expert_layer(current_state) * routing_weights[top_x_list, index_list, None]
     
