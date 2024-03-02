@@ -63,12 +63,12 @@ class MixtralSparseMoeBlock(nn.Module):
 #   )
 # )
 
-# 官方 MoE 的架构如下：
+# 官方 MoE 的架构如下：（以 32 层为例）
 # MixtralForCausalLM(
 #   (model): MixtralModel(
-#     (embed_tokens): Embedding(32000, 128)
+#     (embed_tokens): Embedding(32000, 4096)
 #     (layers): ModuleList(
-#       (1): MixtralDecoderLayer(
+#       (0-31): MixtralDecoderLayer(
 #         (self_attn): MixtralAttention(
 #           (q_proj): Linear(in_features=4096, out_features=4096, bias=False)
 #           (k_proj): Linear(in_features=4096, out_features=4096, bias=False)
@@ -77,7 +77,7 @@ class MixtralSparseMoeBlock(nn.Module):
 #           (rotary_emb): MixtralRotaryEmbedding()
 #         )
 #         (block_sparse_moe): MixtralSparseMoeBlock(
-#           (gate): Linear(in_features=128, out_features=8, bias=False)
+#           (gate): Linear(in_features=4096, out_features=8, bias=False)
 #           (experts): ModuleList(
 #             (0-7): 8 x MixtralBLockSparseTop2MLP(
 #               (w1): Linear(in_features=4096, out_features=14336, bias=False)
