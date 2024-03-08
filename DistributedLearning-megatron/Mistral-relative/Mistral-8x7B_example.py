@@ -204,12 +204,22 @@ for i in range(tokens):
 #         [0, 1],
 #         [1, 0],
 #         [0, 0]])
+# 【token_1】
+#  tensor([[0, 0],
+#         [0, 0],
+#         [0, 0],
+#         [0, 1],
+#         [1, 0],
+#         [0, 0],
+#         [0, 0],
+#         [0, 0]])
 
 final_hidden_states = torch.zeros(
     (batch_size * sequence_length, hidden_dim), 
     dtype=hidden_states.dtype, device=hidden_states.device
 )
-print(f'final moe result shape for each token: {final_hidden_states}')
+print(f'final moe result shape for each token: {final_hidden_states.shape}')
+# final moe result shape for each token: torch.Size([6, 128])
 
 for expert_id in range(experts.num_local_experts):
     print(f'--------expert {expert_id} --------')
@@ -221,10 +231,102 @@ for expert_id in range(experts.num_local_experts):
     print(f'expert {expert_id} top1:0, top2:1', index.tolist())
     print(f'{len(top_x)} / {x.shape[1]} token select expert {expert_id}')
 
-    top_x_list = top_x.tolist()
+    top_x_list = top_x.tolist() # convert tensor to list
     index_list = index.tolist()
 
     current_state = hidden_states[None, top_x_list].reshape(-1, hidden_dim)
 
     current_hidden_state = expert_layer(current_state) * routing_weights[top_x_list, index_list, None]
-    
+
+    final_hidden_states.index_add_(0, top_x, current_hidden_state.to(hidden_states.dtype))
+
+    print(current_state.shape)
+    print(routing_weights[top_x_list, index_list, None])
+    print(current_hidden_state.shape)
+    print(final_hidden_states.shape)
+# --------expert 0 --------
+# tensor([[0, 0, 0, 0, 0, 0],
+#         [0, 0, 0, 0, 0, 0]])
+# expert 0 compute sample index: []
+# expert 0 top1:0, top2:1 []
+# 0 / 6 token select expert 0
+# torch.Size([0, 128])
+# tensor([], size=(0, 1), grad_fn=<IndexBackward0>)
+# torch.Size([0, 128])
+# torch.Size([6, 128])
+# --------expert 1 --------
+# tensor([[0, 0, 0, 0, 0, 0],
+#         [0, 0, 0, 0, 0, 0]])
+# expert 1 compute sample index: []
+# expert 1 top1:0, top2:1 []
+# 0 / 6 token select expert 1
+# torch.Size([0, 128])
+# tensor([], size=(0, 1), grad_fn=<IndexBackward0>)
+# torch.Size([0, 128])
+# torch.Size([6, 128])
+# --------expert 2 --------
+# tensor([[0, 0, 0, 1, 0, 0],
+#         [0, 0, 0, 0, 1, 0]])
+# expert 2 compute sample index: [3, 4]
+# expert 2 top1:0, top2:1 [0, 1]
+# 2 / 6 token select expert 2
+# torch.Size([2, 128])
+# tensor([[0.5724],
+#         [0.4529]], grad_fn=<IndexBackward0>)
+# torch.Size([2, 128])
+# torch.Size([6, 128])
+# --------expert 3 --------
+# tensor([[0, 0, 0, 0, 1, 0],
+#         [0, 1, 0, 0, 0, 0]])
+# expert 3 compute sample index: [4, 1]
+# expert 3 top1:0, top2:1 [0, 1]
+# 2 / 6 token select expert 3
+# torch.Size([2, 128])
+# tensor([[0.5471],
+#         [0.3622]], grad_fn=<IndexBackward0>)
+# torch.Size([2, 128])
+# torch.Size([6, 128])
+# --------expert 4 --------
+# tensor([[0, 1, 1, 0, 0, 0],
+#         [0, 0, 0, 1, 0, 1]])
+# expert 4 compute sample index: [1, 2, 3, 5]
+# expert 4 top1:0, top2:1 [0, 0, 1, 1]
+# 4 / 6 token select expert 4
+# torch.Size([4, 128])
+# tensor([[0.6378],
+#         [0.5725],
+#         [0.4276],
+#         [0.4829]], grad_fn=<IndexBackward0>)
+# torch.Size([4, 128])
+# torch.Size([6, 128])
+# --------expert 5 --------
+# tensor([[0, 0, 0, 0, 0, 0],
+#         [1, 0, 0, 0, 0, 0]])
+# expert 5 compute sample index: [0]
+# expert 5 top1:0, top2:1 [1]
+# 1 / 6 token select expert 5
+# torch.Size([1, 128])
+# tensor([[0.3274]], grad_fn=<IndexBackward0>)
+# torch.Size([1, 128])
+# torch.Size([6, 128])
+# --------expert 6 --------
+# tensor([[1, 0, 0, 0, 0, 0],
+#         [0, 0, 0, 0, 0, 0]])
+# expert 6 compute sample index: [0]
+# expert 6 top1:0, top2:1 [0]
+# 1 / 6 token select expert 6
+# torch.Size([1, 128])
+# tensor([[0.6726]], grad_fn=<IndexBackward0>)
+# torch.Size([1, 128])
+# torch.Size([6, 128])
+# --------expert 7 --------
+# tensor([[0, 0, 0, 0, 0, 1],
+#         [0, 0, 1, 0, 0, 0]])
+# expert 7 compute sample index: [5, 2]
+# expert 7 top1:0, top2:1 [0, 1]
+# 2 / 6 token select expert 7
+# torch.Size([2, 128])
+# tensor([[0.5171],
+#         [0.4275]], grad_fn=<IndexBackward0>)
+# torch.Size([2, 128])
+# torch.Size([6, 128])
