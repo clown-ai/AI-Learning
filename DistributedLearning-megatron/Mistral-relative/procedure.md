@@ -53,7 +53,7 @@ expert_mask = F.one_hot(selected_expert, num_classes=experts.num_local_experts).
 
 ### Expert Procedure
 
-$y$ = $\sum_{i=0}^{n-1} Softmax(Top2(x · W_g))_i · SwiGLU_i(x)$
+\[y = \sum_{i=0}^{n-1} Softmax(Top2(x · W_g))_i · SwiGLU_i(x) \]
 
 `sMoE` based on expert to select token to compute
 `token pre-order`: token selects expert to compute sMoE's result
