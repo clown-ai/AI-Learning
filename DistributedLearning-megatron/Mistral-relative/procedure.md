@@ -56,10 +56,15 @@ expert_mask = F.one_hot(selected_expert, num_classes=experts.num_local_experts).
 $y$ = $\sum_{i=0}^{n-1} Softmax(Top2(x · W_g))_i · SwiGLU_i(x)$
 
 `sMoE` based on expert to select token to compute
+
 `token pre-order`: token selects expert to compute sMoE's result
+
 `expert pre-order`: compute experts' result to get the token's sMoE result
 
 ### Load Balance Loss
+
 $loss$ =  &alpha; · $N · \sum_{i=1}^{N} f_i · P_i$
+
 $f_i$ = $1/T$ · $\sum_{x∈B}${argmax $p(x)=i$}.   The probability of $i_{th}$ expert to be allocated the token in a batch
+
 $P_i$ = $1/T$ · $\sum_{x∈B}$ $p_i(x)$.   The sum of probability that each expert selects the token in a batch
