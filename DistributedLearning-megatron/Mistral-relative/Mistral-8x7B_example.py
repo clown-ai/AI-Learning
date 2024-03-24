@@ -227,15 +227,13 @@ for expert_id in range(experts.num_local_experts):
     expert_layer = experts.experts[expert_id]
     print(expert_mask[expert_id])
     index, top_x = torch.where(expert_mask[expert_id])
-    print(f'expert {expert_id} compute sample index:', top_x.tolist())
-    print(f'expert {expert_id} top1:0, top2:1', index.tolist())
-    print(f'{len(top_x)} / {x.shape[1]} token select expert {expert_id}')
-
     top_x_list = top_x.tolist() # convert tensor to list
     index_list = index.tolist()
+    print(f'expert {expert_id} compute sample index:', top_x_list)
+    print(f'expert {expert_id} top1:0, top2:1', index_list)
+    print(f'{len(top_x)} / {x.shape[1]} token select expert {expert_id}')
 
     current_state = hidden_states[None, top_x_list].reshape(-1, hidden_dim)
-
     current_hidden_state = expert_layer(current_state) * routing_weights[top_x_list, index_list, None]
 
     final_hidden_states.index_add_(0, top_x, current_hidden_state.to(hidden_states.dtype))
@@ -244,6 +242,7 @@ for expert_id in range(experts.num_local_experts):
     print(routing_weights[top_x_list, index_list, None])
     print(current_hidden_state.shape)
     print(final_hidden_states.shape)
+print(final_hidden_states)
 # --------expert 0 --------
 # tensor([[0, 0, 0, 0, 0, 0],
 #         [0, 0, 0, 0, 0, 0]])

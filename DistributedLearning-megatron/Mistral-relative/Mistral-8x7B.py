@@ -63,7 +63,7 @@ class MixtralSparseMoeBlock(nn.Module):
 #   )
 # )
 
-# 官方 MoE 的架构如下：（以 32 层为例）
+# 官方 MoE 的架构如下:
 # MixtralForCausalLM(
 #   (model): MixtralModel(
 #     (embed_tokens): Embedding(32000, 4096)
@@ -93,3 +93,4 @@ class MixtralSparseMoeBlock(nn.Module):
 #     )
 #     (norm): MixtralRMSNorm()
 #   )
+# )
