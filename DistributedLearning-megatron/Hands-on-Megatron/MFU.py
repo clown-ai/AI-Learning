@@ -51,7 +51,7 @@ class MFU:
 
     def summing_up(self):
         # vocab projection: [s, b, h] * [h, V]
-        self.vocab_proj = self.s * self.B * self.h * self.V
+        self.vocab_proj = 2 * self.s * self.B * self.h * self.V
         self.attn = self.calculate_attn()
         self.mlp = self.calculate_mlp()
 
