@@ -79,14 +79,14 @@ gpt_mfu = MFU(1024, 2048, 12288, 4*12288, 96, 51200, "gpt")
 GPT_MFU = gpt_mfu.mfu(313, 128, 107)
 print("GPT3-175B MFU: {:.3f}%".format(GPT_MFU * 100))
 
-llama_mfu = MFU(256, 4096, 4096, 11008, 32, 51200, "llama")
+llama_mfu = MFU(256, 4096, 4096, 11008, 32, 32000, "llama")
 LLAMA_MFU = llama_mfu.mfu(353, 8, 30.9)
 print("LLAMA2-7B MFU: {:.3f}%".format(LLAMA_MFU * 100))
 
-llama_mfu = MFU(512, 4096, 5120, 13824, 40, 51200, "llama")
+llama_mfu = MFU(512, 4096, 5120, 13824, 40, 32000, "llama")
 LLAMA_MFU = llama_mfu.mfu(353, 8, 131.71)
 print("LLAMA2-13B MFU: {:.3f}%".format(LLAMA_MFU * 100))
 
-# GPT3-175B MFU: 52.568%
-# LLAMA2-7B MFU: 55.189%
-# LLAMA2-13B MFU: 49.041%
+# GPT3-175B MFU: 52.660%
+# LLAMA2-7B MFU: 55.378%
+# LLAMA2-13B MFU: 49.152%
