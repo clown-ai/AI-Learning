@@ -7,24 +7,38 @@ import math
     Why there is 2 because we not only hava mul but also have add op in a calcualtion
 """
 class MFU:
-    def __init__(self, batch_size, seq_length, hidden_size, ffn_size, num_layers, vocab_size, model_arch):
+    def __init__(self, batch_size, seq_length, hidden_size, ffn_size, num_layers, 
+                 vocab_size, model_arch, attn_mode, num_gqa=0, attn_heads=0):
         self.B = batch_size
         self.s = seq_length
         self.h = hidden_size
         self.f = ffn_size
         self.L = num_layers
         self.V = vocab_size
+        self.num_gqa = num_gqa
+        self.attn_heads = attn_heads
         self.model_arch = model_arch
+        self.attn_mode = attn_mode
 
     def calculate_attn(self):
-        # Q, K, V projection: [s, b, h] * [h, h] ==> [s, b, h]
-        self.QKV_proj = 2 * self.s * self.B * math.pow(self.h, 2) * 3
-        # Q * K_T: [s, b, h], [s, b, h] --> [b, s, h] * [b, h, s] ==> [b, s, s]
-        self.QK_T = 2 * self.B * math.pow(self.s, 2) * self.h
-        # attn_score * V: [b, s, s] * [b, s, h] ==> [b, s, h]
-        self.score_V = 2 * self.B * math.pow(self.s, 2) * self.h
-        # linear_projection for attn output: [b, s, h] * [h, h] ==> [b, s, h]
-        self.O_proj = 2 * self.B * math.pow(self.h, 2) * self. s
+        if self.attn_mode == "MHA":
+            # Q, K, V projection: [s, b, h] * [h, h] ==> [s, b, h]
+            self.QKV_proj = 2 * self.s * self.B * math.pow(self.h, 2) * 3
+            # Q * K_T: [s, b, h], [s, b, h] --> [b, s, h] * [b, h, s] ==> [b, s, s]
+            self.QK_T = 2 * self.B * math.pow(self.s, 2) * self.h
+            # attn_score * V: [b, s, s] * [b, s, h] ==> [b, s, h]
+            self.score_V = 2 * self.B * math.pow(self.s, 2) * self.h
+            # linear_projection for attn output: [b, s, h] * [h, h] ==> [b, s, h]
+            self.O_proj = 2 * self.B * math.pow(self.h, 2) * self. s
+        if self.attn_mode == "GQA":
+             # Q, K, V projection: [s, b, h] * [h, h] ==> [s, b, h]
+            self.QKV_proj = 2 * self.s * self.B * math.pow(self.h, 2) + 2 * self.s * self.B * math.pow(self.h, 2) * self.num_gqa / self.attn_heads
+            # Q * K_T: [s, b, h], [s, b, h] --> [b, s, h] * [b, h, s] ==> [b, s, s]
+            self.QK_T = 2 * self.B * math.pow(self.s, 2) * self.h
+            # attn_score * V: [b, s, s] * [b, s, h] ==> [b, s, h]
+            self.score_V = 2 * self.B * math.pow(self.s, 2) * self.h
+            # linear_projection for attn output: [b, s, h] * [h, h] ==> [b, s, h]
+            self.O_proj = 2 * self.B * math.pow(self.h, 2) * self. s
 
         return self.QKV_proj + self.QK_T + self.score_V + self.O_proj
 
@@ -75,18 +89,23 @@ class MFU:
         return per_gpu_flops / peak_flops
 
 
-gpt_mfu = MFU(1024, 2048, 12288, 4*12288, 96, 51200, "gpt")
+gpt_mfu = MFU(1024, 2048, 12288, 4*12288, 96, 51200, "gpt", "MHA")
 GPT_MFU = gpt_mfu.mfu(313, 128, 107)
 print("GPT3-175B MFU: {:.3f}%".format(GPT_MFU * 100))
 
-llama_mfu = MFU(256, 4096, 4096, 11008, 32, 32000, "llama")
+llama_mfu = MFU(256, 4096, 4096, 11008, 32, 32000, "llama", "MHA")
 LLAMA_MFU = llama_mfu.mfu(353, 8, 30.9)
 print("LLAMA2-7B MFU: {:.3f}%".format(LLAMA_MFU * 100))
 
-llama_mfu = MFU(512, 4096, 5120, 13824, 40, 32000, "llama")
+llama_mfu = MFU(512, 4096, 5120, 13824, 40, 32000, "llama", "MHA")
 LLAMA_MFU = llama_mfu.mfu(353, 8, 131.71)
 print("LLAMA2-13B MFU: {:.3f}%".format(LLAMA_MFU * 100))
+
+llama_mfu = MFU(1024, 4096, 8192, 28672, 80, 32000, "llama", "GQA", 8, 64)
+LLAMA_MFU = llama_mfu.mfu(353, 32, 306.5)
+print("LLAMA2-70B MFU: {:.3f}%".format(LLAMA_MFU * 100))
 
 # GPT3-175B MFU: 52.660%
 # LLAMA2-7B MFU: 55.378%
 # LLAMA2-13B MFU: 49.152%
+# LLAMA2-13B MFU: 53.9%
