@@ -32,7 +32,7 @@ class MFU:
             self.O_proj = 2 * self.B * math.pow(self.h, 2) * self. s
         if self.attn_mode == "GQA":
              # Q, K, V projection: [s, b, h] * [h, h] ==> [s, b, h]
-            self.QKV_proj = 2 * self.s * self.B * math.pow(self.h, 2) + 2 * self.s * self.B * math.pow(self.h, 2) * self.num_gqa / self.attn_heads
+            self.QKV_proj = 2 * self.s * self.B * math.pow(self.h, 2) + 4 * self.s * self.B * math.pow(self.h, 2) * self.num_gqa / self.attn_heads
             # Q * K_T: [s, b, h], [s, b, h] --> [b, s, h] * [b, h, s] ==> [b, s, s]
             self.QK_T = 2 * self.B * math.pow(self.s, 2) * self.h
             # attn_score * V: [b, s, s] * [b, s, h] ==> [b, s, h]
